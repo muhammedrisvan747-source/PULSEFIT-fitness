@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseFit | The Future of Human Performance</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#050505',
+                            card: '#0A0A0A',
+                            accent: '#5227FF',
+                            neon: '#7df9ff',
+                            pink: '#FF79C6',
+                            surface: '#121212'
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Global Styles */
+        body {
+            background-color: #050505;
+            color: #e5e5e5;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- Laser Flow (Reveal) Styles --- */
+        .laser-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.5rem;
+            cursor: crosshair;
+            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .laser-reveal-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+            /* The mask logic is handled via inline styles in JS */
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            transition: opacity 0.3s ease;
+        }
+
+        /* --- Electric Border Styles --- */
+        .electric-border {
+            --electric-color: #5227FF;
+            --eb-width: 1px;
+            position: relative;
+            border-radius: inherit;
+            isolation: isolate;
+        }
+
+        .eb-svg {
+            position: absolute;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+        }
+
+        .eb-stroke {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            border: var(--eb-width) solid var(--electric-color);
+            pointer-events: none;
+            filter: url(#electric-filter); 
+            opacity: 0.8;
+        }
+
+        .eb-glow {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            box-shadow: 0 0 15px var(--electric-color), inset 0 0 15px var(--electric-color);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: -1;
+            transition: opacity 0.3s ease;
+        }
+
+        .group:hover .eb-glow {
+            opacity: 0.3;
+        }
+
+        /* Utility */
+        .glass-panel {
+            background: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .glass-nav {
+            background: rgba(5, 5, 5, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Text Gradient */
+        .text-gradient {
+            background: linear-gradient(135deg, #fff 0%, #a5a5a5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Chart Animations */
+        @keyframes growUp {
+            from { height: 0; }
+            to { height: var(--h); }
+        }
+        .chart-bar {
+            animation: growUp 1s ease-out forwards;
+        }
+
+        /* Hide scrollbar for clean UI */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #050505;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #262626;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #404040;
+        }
+    </style>
+</head>
+<body class="selection:bg-brand-accent selection:text-white">
+
+    <!-- Global SVG Defs for Electric Border -->
+    <svg class="eb-svg">
+        <defs>
+            <filter id="electric-filter" color-interpolation-filters="sRGB" x="-50%" y="-50%" width="200%" height="200%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="noise" seed="0">
+                    <animate attributeName="seed" values="0;100" dur="1s" repeatCount="indefinite" />
+                </feTurbulence>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="6" xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+        </defs>
+    </svg>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-nav transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="router('home')">
+                <div class="w-8 h-8 bg-gradient-to-br from-brand-accent to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-brand-accent/20">
+                    <i data-lucide="activity" class="text-white w-5 h-5"></i>
+                </div>
+                <span class="font-display font-bold text-xl tracking-tight text-white">PULSE<span class="text-brand-accent">FIT</span></span>
+            </div>
+            
+            <div class="hidden md:flex items-center gap-10 text-sm font-medium text-gray-400">
+                <button onclick="router('home')" class="hover:text-white transition-colors duration-200">Product</button>
+                <button onclick="router('dashboard')" class="hover:text-white transition-colors duration-200">Technology</button>
+                <button onclick="router('premium')" class="hover:text-white transition-colors duration-200">Pricing</button>
+                <button onclick="window.location.href='#'" class="hover:text-white transition-colors duration-200">Stories</button>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button class="hidden md:block text-sm font-medium text-white hover:text-brand-accent transition-colors">Log In</button>
+                <button onclick="router('premium')" class="bg-white text-black px-5 py-2.5 rounded-full text-sm font-bold hover:bg-gray-200 transition-all hover:scale-105 active:scale-95">
+                    Start Free Trial
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- PAGE: HOME -->
+    <main id="page-home" class="relative w-full min-h-screen">
+        <!-- Background Shader: Threads -->
+        <div id="threads-container" class="fixed inset-0 z-0 opacity-40">
+            <canvas id="threads-canvas"></canvas>
+        </div>
+        
+        <!-- Gradient overlay for text readability -->
+        <div class="fixed inset-0 z-0 bg-gradient-to-b from-transparent via-brand-dark/50 to-brand-dark pointer-events-none"></div>
+
+        <!-- Hero Section -->
+        <div class="relative z-10 max-w-7xl mx-auto px-6 pt-40 pb-20">
+            <div class="max-w-4xl">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-accent/30 bg-brand-accent/5 text-brand-accent text-xs font-bold uppercase tracking-wider mb-8 backdrop-blur-md">
+                    <span class="w-1.5 h-1.5 rounded-full bg-brand-accent animate-pulse"></span>
+                    v2.0 Now Available
+                </div>
+                <h1 class="font-display text-6xl md:text-8xl font-medium tracking-tighter leading-[0.95] mb-8 text-white">
+                    Sculpt your <br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-accent via-brand-pink to-brand-accent bg-[length:200%_auto] animate-[gradient_3s_ease_infinite]">Future Self.</span>
+                </h1>
+                <p class="text-gray-400 text-xl md:text-2xl max-w-xl leading-relaxed mb-10 font-light">
+                    Experience fitness tracking redefined by AI and biometric precision. Join the elite community pushing human potential.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row items-center gap-4 mb-20">
+                    <button onclick="router('dashboard')" class="w-full sm:w-auto px-8 py-4 bg-white text-black rounded-lg font-bold hover:bg-gray-100 transition-all hover:translate-y-[-2px] shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                        Launch Dashboard
+                    </button>
+                    <button class="w-full sm:w-auto px-8 py-4 glass-panel rounded-lg font-medium hover:bg-white/5 transition-colors flex items-center justify-center gap-2 group">
+                        <i data-lucide="play-circle" class="w-5 h-5 text-brand-accent group-hover:text-white transition-colors"></i>
+                        Watch Showreel
+                    </button>
+                </div>
+
+                <!-- Social Proof -->
+                <div class="border-t border-white/10 pt-8">
+                    <p class="text-sm text-gray-500 mb-4 font-medium">TRUSTED BY ELITE ATHLETES FROM</p>
+                    <div class="flex flex-wrap gap-8 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+                        <!-- Reusing lucide icons as fake logos for demo purposes -->
+                        <div class="flex items-center gap-2 text-xl font-display font-bold"><i data-lucide="zap" class="fill-current"></i> VOLT</div>
+                        <div class="flex items-center gap-2 text-xl font-display font-bold"><i data-lucide="triangle" class="fill-current"></i> PEAK</div>
+                        <div class="flex items-center gap-2 text-xl font-display font-bold"><i data-lucide="hexagon" class="fill-current"></i> OMNI</div>
+                        <div class="flex items-center gap-2 text-xl font-display font-bold"><i data-lucide="circle-dashed" class="fill-current"></i> AURA</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Grid -->
+        <section class="relative z-10 py-24 bg-brand-dark border-t border-white/5">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="grid md:grid-cols-3 gap-8 mb-32">
+                    <div class="p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-brand-accent/30 transition-colors group">
+                        <div class="w-12 h-12 bg-brand-accent/20 rounded-lg flex items-center justify-center mb-6 text-brand-accent group-hover:scale-110 transition-transform">
+                            <i data-lucide="brain-circuit" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-xl font-display font-bold mb-3">Neural Analysis</h3>
+                        <p class="text-gray-400 leading-relaxed">Our proprietary AI interprets your HRV and sleep data to predict your recovery with 99.8% accuracy.</p>
+                    </div>
+                    <div class="p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-brand-pink/30 transition-colors group">
+                        <div class="w-12 h-12 bg-brand-pink/20 rounded-lg flex items-center justify-center mb-6 text-brand-pink group-hover:scale-110 transition-transform">
+                            <i data-lucide="activity" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-xl font-display font-bold mb-3">Real-time Biometrics</h3>
+                        <p class="text-gray-400 leading-relaxed">Latency-free heart rate monitoring ensures you stay exactly in your target zone for maximum hypertrophy.</p>
+                    </div>
+                    <div class="p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-brand-neon/30 transition-colors group">
+                        <div class="w-12 h-12 bg-brand-neon/20 rounded-lg flex items-center justify-center mb-6 text-brand-neon group-hover:scale-110 transition-transform">
+                            <i data-lucide="share-2" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-xl font-display font-bold mb-3">Ecosystem Sync</h3>
+                        <p class="text-gray-400 leading-relaxed">Seamlessly integrates with Apple Health, Strava, and Oura to create a unified profile of your health.</p>
+                    </div>
+                </div>
+
+                <!-- Laser Reveal Section -->
+                <div class="relative">
+                    <div class="text-center mb-16 max-w-2xl mx-auto">
+                        <div class="text-brand-accent font-bold tracking-widest text-xs uppercase mb-4">Under the Hood</div>
+                        <h2 class="font-display text-4xl md:text-5xl font-bold mb-4">See what others miss.</h2>
+                        <p class="text-gray-400 text-lg">Hover over the interface to reveal the skeletal tracking layer PulseFit sees in real-time.</p>
+                    </div>
+
+                    <div class="max-w-5xl mx-auto">
+                        <!-- Laser Flow Component -->
+                        <div id="laser-card" class="laser-container h-[500px] md:h-[700px] bg-brand-card border border-white/10 flex items-center justify-center relative group">
+                            
+                            <!-- Base Content (Data View) -->
+                            <div class="absolute inset-0 flex flex-col items-center justify-center bg-[#08040d] text-center p-10">
+                                <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+                                <i data-lucide="scan-face" class="w-20 h-20 text-brand-pink mb-8 opacity-80 animate-pulse"></i>
+                                <h3 class="text-4xl font-display font-bold text-white mb-2">Scan Complete</h3>
+                                <p class="text-brand-pink/60 font-mono text-sm mb-12">ID: 884-29-AX • REGION: TORSO</p>
+                                
+                                <div class="grid grid-cols-3 gap-4 md:gap-12 w-full max-w-2xl">
+                                    <div class="p-4 border border-brand-pink/20 rounded-lg bg-brand-pink/5">
+                                        <div class="text-3xl font-bold text-white mb-1">12%</div>
+                                        <div class="text-[10px] tracking-widest text-brand-pink/70 uppercase">Body Fat</div>
+                                    </div>
+                                    <div class="p-4 border border-brand-pink/20 rounded-lg bg-brand-pink/5">
+                                        <div class="text-3xl font-bold text-white mb-1">84<span class="text-sm">bpm</span></div>
+                                        <div class="text-[10px] tracking-widest text-brand-pink/70 uppercase">HRV Score</div>
+                                    </div>
+                                    <div class="p-4 border border-brand-pink/20 rounded-lg bg-brand-pink/5">
+                                        <div class="text-3xl font-bold text-white mb-1">98</div>
+                                        <div class="text-[10px] tracking-widest text-brand-pink/70 uppercase">Recovery</div>
+                                    </div>
+                                </div>
+                                <!-- Tech Grid Lines -->
+                                <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: linear-gradient(#ff79c6 1px, transparent 1px), linear-gradient(90deg, #ff79c6 1px, transparent 1px); background-size: 60px 60px;"></div>
+                            </div>
+
+                            <!-- Top Image (Normal View) -->
+                            <img 
+                                id="reveal-img" 
+                                src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop" 
+                                alt="Athlete"
+                                class="laser-reveal-img grayscale opacity-60 mix-blend-luminosity group-hover:opacity-100 group-hover:grayscale-0 transition-all duration-700"
+                            >
+                            
+                            <!-- Laser Beam UI -->
+                            <div id="laser-beam" class="absolute pointer-events-none w-full h-[1px] bg-brand-pink shadow-[0_0_20px_#ff79c6] z-20 opacity-0 transition-opacity duration-100 flex items-center">
+                                <div class="w-full h-full bg-white opacity-50"></div>
+                                <div class="absolute right-4 text-[10px] font-mono text-brand-pink bg-black px-2 py-0.5 border border-brand-pink">SCANNING</div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials -->
+        <section class="py-24 bg-[#080808] border-t border-white/5">
+            <div class="max-w-7xl mx-auto px-6">
+                <h2 class="text-3xl font-display font-bold mb-12 text-center">Community Stories</h2>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <!-- Review 1 -->
+                    <div class="glass-panel p-8 rounded-2xl">
+                        <div class="flex gap-1 text-brand-accent mb-4">
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        </div>
+                        <p class="text-gray-300 mb-6 leading-relaxed">"The recovery metrics are scary accurate. PulseFit knew I was getting sick two days before I felt symptoms. Essential gear."</p>
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?fit=crop&w=100&h=100" class="w-full h-full object-cover">
+                            </div>
+                            <div>
+                                <div class="font-bold text-sm">Marcus Chen</div>
+                                <div class="text-xs text-gray-500">Pro Triathlete</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review 2 -->
+                    <div class="glass-panel p-8 rounded-2xl relative">
+                        <!-- Decorative element -->
+                        <div class="absolute -top-4 -right-4 w-12 h-12 bg-brand-accent/20 rounded-full blur-xl"></div>
+                        
+                        <div class="flex gap-1 text-brand-accent mb-4">
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        </div>
+                        <p class="text-gray-300 mb-6 leading-relaxed">"I've tried Whoop, Oura, and Apple Watch. Nothing visualizes my training load like PulseFit. The dashboard is art."</p>
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?fit=crop&w=100&h=100" class="w-full h-full object-cover">
+                            </div>
+                            <div>
+                                <div class="font-bold text-sm">Sarah Jenkins</div>
+                                <div class="text-xs text-gray-500">CrossFit Games Athlete</div>
+                            </div>
+                        </div>
+                    </div>
+
+                     <!-- Review 3 -->
+                     <div class="glass-panel p-8 rounded-2xl">
+                        <div class="flex gap-1 text-brand-accent mb-4">
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        </div>
+                        <p class="text-gray-300 mb-6 leading-relaxed">"Upgrading to Elite was a no-brainer. The AI coaching tips actually make sense for my specific biology."</p>
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?fit=crop&w=100&h=100" class="w-full h-full object-cover">
+                            </div>
+                            <div>
+                                <div class="font-bold text-sm">David O'Connor</div>
+                                <div class="text-xs text-gray-500">Biohacker</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- PAGE: DASHBOARD -->
+    <main id="page-dashboard" class="hidden min-h-screen pt-28 pb-12 px-6 bg-brand-dark">
+        <div class="max-w-7xl mx-auto">
+            <header class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                <div>
+                    <h1 class="text-3xl font-display font-bold mb-2">Morning, Alex</h1>
+                    <div class="flex items-center gap-2 text-sm text-gray-400">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        <span>System Online</span>
+                        <span class="mx-2">•</span>
+                        <span>Last sync: 2 mins ago</span>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button class="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm font-medium hover:bg-white/10 transition-colors">Export Data</button>
+                    <button class="px-4 py-2 rounded-lg bg-brand-accent text-white text-sm font-medium hover:bg-brand-accent/80 transition-colors shadow-lg shadow-brand-accent/20">Start Session</button>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Sidebar Stats -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- Profile Card -->
+                    <div class="glass-panel rounded-2xl p-6 flex flex-col items-center text-center">
+                        <div class="w-20 h-20 rounded-full p-1 border-2 border-brand-accent mb-4">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?fit=crop&w=200&h=200" class="w-full h-full rounded-full object-cover">
+                        </div>
+                        <h2 class="font-bold text-lg">Alex Doe</h2>
+                        <div class="text-brand-accent text-xs font-bold uppercase tracking-wider mb-6">Elite Member</div>
+                        <div class="w-full grid grid-cols-2 gap-4 border-t border-white/10 pt-4">
+                            <div>
+                                <div class="text-2xl font-display font-bold">12</div>
+                                <div class="text-[10px] text-gray-500 uppercase">Workouts</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-display font-bold">4.2k</div>
+                                <div class="text-[10px] text-gray-500 uppercase">Calories</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Readiness Score -->
+                    <div class="glass-panel rounded-2xl p-6 relative overflow-hidden">
+                        <h3 class="text-sm text-gray-400 font-medium mb-4">Readiness</h3>
+                        <div class="flex items-end gap-2 mb-2">
+                            <span class="text-5xl font-display font-bold text-green-400">98</span>
+                            <span class="text-sm font-bold text-green-400 mb-2">%</span>
+                        </div>
+                        <p class="text-xs text-gray-500 leading-relaxed">Your HRV is optimal. Today is a perfect day for high-intensity interval training.</p>
+                        <div class="mt-4 h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full bg-green-400 w-[98%] shadow-[0_0_10px_#4ade80]"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Chart Area -->
+                <div class="lg:col-span-3 space-y-6">
+                    <!-- Primary Chart -->
+                    <div class="glass-panel rounded-2xl p-8 relative overflow-hidden min-h-[400px]">
+                        <div class="flex justify-between items-center mb-8">
+                            <div>
+                                <h3 class="text-lg font-bold">Strain vs Recovery</h3>
+                                <p class="text-xs text-gray-500">Last 7 Days</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="p-2 hover:bg-white/5 rounded"><i data-lucide="more-horizontal" class="w-4 h-4 text-gray-400"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- CSS Chart Mockup -->
+                        <div class="flex items-end justify-between h-64 gap-4 px-2">
+                            <!-- Bar 1 -->
+                            <div class="flex-1 flex flex-col justify-end gap-2 group">
+                                <div class="w-full bg-brand-accent/20 rounded-sm h-[40%] group-hover:bg-brand-accent transition-all duration-300 relative chart-bar" style="--h: 40%">
+                                    <div class="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold bg-white text-black px-2 py-1 rounded">4.0</div>
+                                </div>
+                                <div class="w-full bg-green-500/20 rounded-sm h-[60%] group-hover:bg-green-500 transition-all duration-300 chart-bar" style="--h: 60%"></div>
+                                <div class="text-[10px] text-center text-gray-500 mt-2">Mon</div>
+                            </div>
+                            <!-- Bar 2 -->
+                            <div class="flex-1 flex flex-col justify-end gap-2 group">
+                                <div class="w-full bg-brand-accent/20 rounded-sm h-[70%] group-hover:bg-brand-accent transition-all duration-300 relative chart-bar" style="--h: 70%"></div>
+                                <div class="w-full bg-green-500/20 rounded-sm h-[40%] group-hover:bg-green-500 transition-all duration-300 chart-bar" style="--h: 40%"></div>
+                                <div class="text-[10px] text-center text-gray-500 mt-2">Tue</div>
+                            </div>
+                             <!-- Bar 3 -->
+                             <div class="flex-1 flex flex-col justify-end gap-2 group">
+                                <div class="w-full bg-brand-accent/20 rounded-sm h-[50%] group-hover:bg-brand-accent transition-all duration-300 relative chart-bar" style="--h: 50%"></div>
+                                <div class="w-full bg-green-500/20 rounded-sm h-[50%] group-hover:bg-green-500 transition-all duration-300 chart-bar" style="--h: 50%"></div>
+                                <div class="text-[10px] text-center text-gray-500 mt-2">Wed</div>
+                            </div>
+                             <!-- Bar 4 (Peak) -->
+                             <div class="flex-1 flex flex-col justify-end gap-2 group">
+                                <div class="w-full bg-brand-accent rounded-sm h-[90%] shadow-[0_0_20px_#5227FF] relative chart-bar" style="--h: 90%">
+                                    <div class="absolute -top-12 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                                        <div class="text-xs font-bold text-brand-accent">PEAK</div>
+                                        <div class="w-px h-4 bg-brand-accent/50"></div>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-green-500/20 rounded-sm h-[30%] group-hover:bg-green-500 transition-all duration-300 chart-bar" style="--h: 30%"></div>
+                                <div class="text-[10px] text-center text-white font-bold mt-2">Thu</div>
+                            </div>
+                             <!-- Bar 5 -->
+                             <div class="flex-1 flex flex-col justify-end gap-2 group">
+                                <div class="w-full bg-brand-accent/20 rounded-sm h-[45%] group-hover:bg-brand-accent transition-all duration-300 relative chart-bar" style="--h: 45%"></div>
+                                <div class="w-full bg-green-500/20 rounded-sm h-[80%] group-hover:bg-green-500 transition-all duration-300 chart-bar" style="--h: 80%"></div>
+                                <div class="text-[10px] text-center text-gray-500 mt-2">Fri</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Metrics Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="glass-panel rounded-2xl p-6 hover:bg-white/5 transition-colors">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="p-2 bg-orange-500/10 rounded-lg text-orange-500"><i data-lucide="flame" class="w-5 h-5"></i></div>
+                                <span class="text-xs text-green-400 font-bold">+12%</span>
+                            </div>
+                            <div class="text-3xl font-display font-bold">2,405</div>
+                            <div class="text-xs text-gray-400 mt-1">Active Calories</div>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 hover:bg-white/5 transition-colors">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="p-2 bg-blue-500/10 rounded-lg text-blue-500"><i data-lucide="moon" class="w-5 h-5"></i></div>
+                                <span class="text-xs text-red-400 font-bold">-2%</span>
+                            </div>
+                            <div class="text-3xl font-display font-bold">7h 12m</div>
+                            <div class="text-xs text-gray-400 mt-1">Sleep Duration</div>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 hover:bg-white/5 transition-colors">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="p-2 bg-brand-pink/10 rounded-lg text-brand-pink"><i data-lucide="heart-pulse" class="w-5 h-5"></i></div>
+                                <span class="text-xs text-green-400 font-bold">Optimal</span>
+                            </div>
+                            <div class="text-3xl font-display font-bold">48</div>
+                            <div class="text-xs text-gray-400 mt-1">RHR (bpm)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- PAGE: PREMIUM -->
+    <main id="page-premium" class="hidden min-h-screen pt-32 pb-20 px-6 bg-[#050505]">
+        <div class="text-center max-w-3xl mx-auto mb-20">
+            <div class="text-brand-accent font-bold tracking-widest text-xs uppercase mb-4">Membership</div>
+            <h2 class="font-display text-5xl md:text-6xl font-bold mb-6">Upgrade your Engine</h2>
+            <p class="text-gray-400 text-lg">Join the 1% of athletes optimizing their biology with PulseFit Elite.</p>
+            
+            <!-- Toggle -->
+            <div class="flex items-center justify-center gap-4 mt-8">
+                <span class="text-sm font-medium text-white">Monthly</span>
+                <div class="w-12 h-6 bg-brand-accent rounded-full p-1 cursor-pointer">
+                    <div class="w-4 h-4 bg-white rounded-full ml-auto"></div>
+                </div>
+                <span class="text-sm font-medium text-gray-500">Yearly <span class="text-brand-accent text-[10px] ml-1">SAVE 20%</span></span>
+            </div>
+        </div>
+
+        <div class="max-w-6xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
+            
+            <!-- Standard Card -->
+            <div class="glass-panel p-8 rounded-2xl border border-white/5 flex flex-col h-[500px] hover:border-white/10 transition-colors">
+                <div class="mb-4 text-gray-400 font-bold tracking-wider text-xs uppercase">Starter</div>
+                <div class="text-4xl font-display font-bold mb-6 text-white">$0 <span class="text-lg font-sans font-normal text-gray-500">/mo</span></div>
+                <p class="text-gray-400 text-sm mb-8">Perfect for casual tracking and community challenges.</p>
+                <div class="flex-1 space-y-4">
+                    <li class="flex items-center gap-3 text-sm text-gray-300"><i data-lucide="check" class="w-4 h-4 text-white"></i> Basic Biometrics</li>
+                    <li class="flex items-center gap-3 text-sm text-gray-300"><i data-lucide="check" class="w-4 h-4 text-white"></i> Community Access</li>
+                    <li class="flex items-center gap-3 text-sm text-gray-300"><i data-lucide="check" class="w-4 h-4 text-white"></i> 10 Saved Workouts</li>
+                </div>
+                <button class="w-full py-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors font-bold text-white text-sm mt-8 border border-white/5">Current Plan</button>
+            </div>
+
+            <!-- PRO Card (Uses Electric Border) -->
+            <div class="relative group h-[580px] -mt-4 z-10">
+                <!-- Electric Border Container -->
+                <div class="electric-border rounded-2xl h-full bg-[#0d0d0d]" style="--electric-color: #5227FF;">
+                    <div class="eb-stroke"></div>
+                    <div class="eb-glow"></div>
+                    
+                    <div class="relative z-10 p-10 h-full flex flex-col">
+                        <div class="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-transparent via-brand-accent to-transparent opacity-50"></div>
+                        
+                        <div class="mb-4 text-brand-accent font-bold tracking-wider text-xs uppercase flex items-center gap-2">
+                            <i data-lucide="zap" class="w-3 h-3 fill-current"></i> Elite
+                        </div>
+                        <div class="text-5xl font-display font-bold mb-6 text-white">$29 <span class="text-lg font-sans font-normal text-gray-500">/mo</span></div>
+                        <p class="text-gray-400 text-sm mb-8">For serious athletes demanding precision and AI insights.</p>
+                        
+                        <div class="flex-1 space-y-5">
+                            <li class="flex items-center gap-3 text-sm text-white"><div class="p-1 rounded bg-brand-accent/20 text-brand-accent"><i data-lucide="check" class="w-3 h-3"></i></div> AI Coaching Engine</li>
+                            <li class="flex items-center gap-3 text-sm text-white"><div class="p-1 rounded bg-brand-accent/20 text-brand-accent"><i data-lucide="check" class="w-3 h-3"></i></div> Recovery Analysis</li>
+                            <li class="flex items-center gap-3 text-sm text-white"><div class="p-1 rounded bg-brand-accent/20 text-brand-accent"><i data-lucide="check" class="w-3 h-3"></i></div> Unlimited History</li>
+                            <li class="flex items-center gap-3 text-sm text-white"><div class="p-1 rounded bg-brand-accent/20 text-brand-accent"><i data-lucide="check" class="w-3 h-3"></i></div> Sleep Staging</li>
+                            <li class="flex items-center gap-3 text-sm text-white"><div class="p-1 rounded bg-brand-accent/20 text-brand-accent"><i data-lucide="check" class="w-3 h-3"></i></div> Strain Coach</li>
+                        </div>
+                        <button class="w-full py-4 rounded-lg bg-brand-accent hover:bg-brand-accent/90 transition-all hover:shadow-[0_0_30px_rgba(82,39,255,0.4)] font-bold text-white text-sm mt-8">Upgrade Now</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ultra Card -->
+            <div class="relative h-[500px]">
+                 <!-- Electric Border Container (Pink Variant) -->
+                 <div class="electric-border rounded-2xl h-full bg-[#0a0a0a]" style="--electric-color: #FF79C6;">
+                    <div class="eb-stroke"></div>
+                    <div class="eb-glow"></div>
+                    
+                    <div class="relative z-10 p-8 h-full flex flex-col">
+                        <div class="mb-4 text-brand-pink font-bold tracking-wider text-xs uppercase">Olympian</div>
+                        <div class="text-4xl font-display font-bold mb-6 text-white">$99 <span class="text-lg font-sans font-normal text-gray-500">/mo</span></div>
+                        <p class="text-gray-400 text-sm mb-8">Complete biological optimization with human support.</p>
+                        <div class="flex-1 space-y-4">
+                            <li class="flex items-center gap-3 text-sm text-gray-300"><i data-lucide="check" class="w-4 h-4 text-brand-pink"></i> 1-on-1 Human Coach</li>
+                            <li class="flex items-center gap-3 text-sm text-gray-300"><i data-lucide="check" class="w-4 h-4 text-brand-pink"></i> Nutrition Planning</li>
+                            <li class="flex items-center gap-3 text-sm text-gray-300"><i data-lucide="check" class="w-4 h-4 text-brand-pink"></i> DNA Analysis Kit</li>
+                            <li class="flex items-center gap-3 text-sm text-gray-300"><i data-lucide="check" class="w-4 h-4 text-brand-pink"></i> Priority Support</li>
+                        </div>
+                        <button class="w-full py-4 rounded-lg border border-brand-pink text-brand-pink hover:bg-brand-pink hover:text-white transition-colors font-bold text-sm mt-8">Contact Sales</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- FOOTER / CTA (Balatro Background) -->
+    <footer class="relative w-full overflow-hidden border-t border-white/10 bg-[#020202]">
+        
+        <!-- CTA Section -->
+        <div class="relative h-[500px] flex items-center justify-center">
+            <!-- Balatro Shader Background -->
+            <canvas id="balatro-canvas" class="absolute inset-0 z-0 opacity-80"></canvas>
+            <div class="absolute inset-0 bg-gradient-to-t from-[#020202] via-[#020202]/80 to-transparent z-10"></div>
+            
+            <div class="relative z-20 text-center px-6 max-w-3xl">
+                <h2 class="font-display text-5xl md:text-7xl font-bold mb-8 tracking-tight">Ready to break your <br> genetic limits?</h2>
+                <div class="flex flex-col md:flex-row gap-4 justify-center items-center">
+                    <input type="email" placeholder="Enter your email" class="px-8 py-4 rounded-full bg-white/5 backdrop-blur-md border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:border-brand-accent focus:bg-white/10 w-full md:w-96 transition-all">
+                    <button class="px-10 py-4 rounded-full bg-white text-black font-bold hover:scale-105 transition-transform shadow-[0_0_40px_rgba(255,255,255,0.2)]">Join Waitlist</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Links -->
+        <div class="relative z-20 max-w-7xl mx-auto px-6 py-16 grid grid-cols-2 md:grid-cols-4 gap-12 border-t border-white/5 bg-[#020202]">
+            <div class="col-span-2 md:col-span-1">
+                <div class="flex items-center gap-2 mb-6">
+                    <div class="w-6 h-6 bg-brand-accent rounded flex items-center justify-center">
+                        <i data-lucide="activity" class="text-white w-4 h-4"></i>
+                    </div>
+                    <span class="font-display font-bold text-lg tracking-wide">PULSE<span class="text-brand-accent">FIT</span></span>
+                </div>
+                <p class="text-gray-500 text-sm leading-relaxed">The world's most advanced biometric tracking platform. Designed in San Francisco.</p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-6">Product</h4>
+                <ul class="space-y-4 text-sm text-gray-500">
+                    <li><a href="#" class="hover:text-white transition-colors">Features</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Integration</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Pricing</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Updates</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-6">Company</h4>
+                <ul class="space-y-4 text-sm text-gray-500">
+                    <li><a href="#" class="hover:text-white transition-colors">About</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Careers</a> <span class="text-[10px] bg-brand-accent/20 text-brand-accent px-1.5 py-0.5 rounded ml-2">Hiring</span></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-6">Legal</h4>
+                <ul class="space-y-4 text-sm text-gray-500">
+                    <li><a href="#" class="hover:text-white transition-colors">Privacy</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Terms</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Security</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="relative z-20 max-w-7xl mx-auto px-6 py-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-xs text-gray-600">
+            <p>&copy; 2024 PulseFit Inc. All rights reserved.</p>
+            <div class="flex gap-6 mt-4 md:mt-0">
+                <a href="#" class="hover:text-white transition-colors"><i data-lucide="twitter" class="w-4 h-4"></i></a>
+                <a href="#" class="hover:text-white transition-colors"><i data-lucide="instagram" class="w-4 h-4"></i></a>
+                <a href="#" class="hover:text-white transition-colors"><i data-lucide="linkedin" class="w-4 h-4"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script>
+        // --- 1. ROUTER LOGIC ---
+        function router(page) {
+            document.querySelectorAll('main').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('animate-in', 'fade-in', 'zoom-in-95', 'duration-500');
+            });
+            
+            const target = document.getElementById(`page-${page}`);
+            target.classList.remove('hidden');
+            target.classList.add('animate-in', 'fade-in', 'zoom-in-95', 'duration-500');
+            
+            window.scrollTo(0, 0);
+        }
+        
+        // Initialize Icons
+        lucide.createIcons();
+
+        // --- 2. LASER FLOW LOGIC ---
+        const laserCard = document.getElementById('laser-card');
+        const revealImg = document.getElementById('reveal-img');
+        const laserBeam = document.getElementById('laser-beam');
+
+        if(laserCard && revealImg) {
+            laserCard.addEventListener('mousemove', (e) => {
+                const rect = laserCard.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                // Update mask position (CSS Mask for Reveal)
+                const maskStyle = `radial-gradient(circle at ${x}px ${y}px, transparent 0px, transparent 80px, black 120px)`;
+                
+                revealImg.style.webkitMaskImage = maskStyle;
+                revealImg.style.maskImage = maskStyle;
+
+                // Move the "Laser" visual helper
+                laserBeam.style.opacity = '1';
+                laserBeam.style.top = `${y}px`;
+            });
+
+            laserCard.addEventListener('mouseleave', () => {
+                // Reset mask
+                revealImg.style.webkitMaskImage = 'none';
+                revealImg.style.maskImage = 'none';
+                laserBeam.style.opacity = '0';
+            });
+        }
+
+        // --- 3. WEBGL SHADER BOILERPLATE ---
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error(gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        function createProgram(gl, vertexSrc, fragmentSrc) {
+            const vs = createShader(gl, gl.VERTEX_SHADER, vertexSrc);
+            const fs = createShader(gl, gl.FRAGMENT_SHADER, fragmentSrc);
+            const prog = gl.createProgram();
+            gl.attachShader(prog, vs);
+            gl.attachShader(prog, fs);
+            gl.linkProgram(prog);
+            if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+                console.error(gl.getProgramInfoLog(prog));
+                return null;
+            }
+            return prog;
+        }
+
+        const COMMON_VS = `
+            attribute vec2 position;
+            void main() {
+                gl_Position = vec4(position, 0.0, 1.0);
+            }
+        `;
+
+        // --- 4. THREADS SHADER (Hero) ---
+        (function initThreads() {
+            const canvas = document.getElementById('threads-canvas');
+            const gl = canvas.getContext('webgl');
+            if(!gl) return;
+
+            const fs = `
+                precision highp float;
+                uniform float iTime;
+                uniform vec2 iResolution;
+                uniform vec2 uMouse;
+                
+                #define PI 3.1415926538
+
+                // Simplex 2D noise
+                vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+                float snoise(vec2 v){
+                    const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+                    vec2 i  = floor(v + dot(v, C.yy) );
+                    vec2 x0 = v -   i + dot(i, C.xx);
+                    vec2 i1;
+                    i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+                    vec4 x12 = x0.xyxy + C.xxzz;
+                    x12.xy -= i1;
+                    i = mod(i, 289.0);
+                    vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 )) + i.x + vec3(0.0, i1.x, 1.0 ));
+                    vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+                    m = m*m ;
+                    m = m*m ;
+                    vec3 x = 2.0 * fract(p * C.www) - 1.0;
+                    vec3 h = abs(x) - 0.5;
+                    vec3 ox = floor(x + 0.5);
+                    vec3 a0 = x - ox;
+                    m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+                    vec3 g;
+                    g.x  = a0.x  * x0.x  + h.x  * x0.y;
+                    g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+                    return 130.0 * dot(m, g);
+                }
+
+                void main() {
+                    vec2 uv = gl_FragCoord.xy / iResolution.xy;
+                    
+                    // Background dark
+                    vec3 color = vec3(0.02, 0.02, 0.05);
+
+                    // Lines
+                    float count = 30.0;
+                    for (float i = 0.0; i < 30.0; i++) {
+                        float p = i / 30.0;
+                        
+                        // Wave Movement
+                        float t = iTime * 0.2 + p * 2.0;
+                        float x = uv.x;
+                        
+                        // Noise based y offset
+                        float noise = snoise(vec2(x * 2.0, t));
+                        float y = 0.5 + noise * 0.2 + (uMouse.y - 0.5) * 0.2; // Mouse influence vertical
+                        
+                        // Dist from line
+                        float dist = abs(uv.y - y);
+                        
+                        // Glow
+                        float glow = 0.003 / dist;
+                        
+                        // Fade edges
+                        glow *= smoothstep(0.0, 0.1, x) * smoothstep(1.0, 0.9, x);
+                        
+                        // Color palette (Purple/Blue/Pink)
+                        vec3 lineCol = 0.5 + 0.5 * cos(vec3(0.6, 0.3, 0.9) * p * 6.0 + iTime);
+                        color += glow * lineCol * 0.4; // intensity
+                    }
+
+                    gl_FragColor = vec4(color, 1.0);
+                }
+            `;
+
+            const program = createProgram(gl, COMMON_VS, fs);
+            
+            // Buffers
+            const buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+            
+            const posLoc = gl.getAttribLocation(program, 'position');
+            gl.enableVertexAttribArray(posLoc);
+            gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+            // Uniforms
+            const uTime = gl.getUniformLocation(program, 'iTime');
+            const uRes = gl.getUniformLocation(program, 'iResolution');
+            const uMouse = gl.getUniformLocation(program, 'uMouse');
+
+            let mouseX = 0.5, mouseY = 0.5;
+            window.addEventListener('mousemove', e => {
+                mouseX = e.clientX / window.innerWidth;
+                mouseY = 1.0 - e.clientY / window.innerHeight;
+            });
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            function render(time) {
+                gl.useProgram(program);
+                gl.uniform1f(uTime, time * 0.001);
+                gl.uniform2f(uRes, canvas.width, canvas.height);
+                gl.uniform2f(uMouse, mouseX, mouseY);
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+                requestAnimationFrame(render);
+            }
+            requestAnimationFrame(render);
+        })();
+
+
+        // --- 5. BALATRO SHADER (Footer) ---
+        (function initBalatro() {
+            const canvas = document.getElementById('balatro-canvas');
+            const gl = canvas.getContext('webgl');
+            if(!gl) return;
+
+            const fs = `
+                precision highp float;
+                uniform float iTime;
+                uniform vec2 iResolution;
+                
+                void main() {
+                    vec2 uv = (gl_FragCoord.xy - 0.5 * iResolution.xy) / min(iResolution.y, iResolution.x);
+                    
+                    // Rotation
+                    float t = iTime * 0.2;
+                    float s = sin(t);
+                    float c = cos(t);
+                    uv *= mat2(c, -s, s, c);
+                    
+                    vec3 col = vec3(0.0);
+                    
+                    // Swirl Logic
+                    float r = length(uv);
+                    float a = atan(uv.y, uv.x);
+                    
+                    // Create psychedelic rings
+                    float v = sin(10.0 * (r - t*0.5));
+                    v += sin(10.0 * (a * r + t));
+                    
+                    // Color mapping (Dark red/blue for premium feel)
+                    vec3 col1 = vec3(0.32, 0.15, 1.0); // Electric Blue/Purple
+                    vec3 col2 = vec3(1.0, 0.2, 0.5); // Pink/Red
+                    
+                    col = mix(col1, col2, 0.5 + 0.5 * sin(v * 2.0));
+                    
+                    // Vignette
+                    col *= 1.0 - r * 0.8;
+                    
+                    gl_FragColor = vec4(col, 1.0);
+                }
+            `;
+
+            const program = createProgram(gl, COMMON_VS, fs);
+            
+            const buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+            
+            const posLoc = gl.getAttribLocation(program, 'position');
+            gl.enableVertexAttribArray(posLoc);
+            gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+            const uTime = gl.getUniformLocation(program, 'iTime');
+            const uRes = gl.getUniformLocation(program, 'iResolution');
+
+            function resize() {
+                // Ensure the footer container has dimensions before sizing canvas
+                const parent = canvas.parentElement;
+                if(!parent) return;
+                canvas.width = parent.clientWidth;
+                canvas.height = parent.clientHeight;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            }
+            window.addEventListener('resize', resize);
+            // Delay initial resize slightly to ensure layout is done
+            setTimeout(resize, 100);
+
+            function render(time) {
+                // Only render if visible (Footer)
+                const rect = canvas.getBoundingClientRect();
+                if (rect.top < window.innerHeight && rect.bottom > 0) {
+                    gl.useProgram(program);
+                    gl.uniform1f(uTime, time * 0.001);
+                    gl.uniform2f(uRes, canvas.width, canvas.height);
+                    gl.drawArrays(gl.TRIANGLES, 0, 6);
+                }
+                requestAnimationFrame(render);
+            }
+            requestAnimationFrame(render);
+        })();
+
+        // Scroll Observer for Fade-ins
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-in', 'fade-in', 'slide-in-from-bottom-8', 'duration-700');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.glass-panel').forEach(el => observer.observe(el));
+        
+        // Sticky Header Effect
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) {
+                nav.classList.add('shadow-lg', 'bg-black/80');
+            } else {
+                nav.classList.remove('shadow-lg', 'bg-black/80');
+            }
+        });
+
+    </script>
+</body>
+</html>
